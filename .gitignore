@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+config/providers.json
+config/skills.json
+config/workspaces.json
+
+data/chat.db

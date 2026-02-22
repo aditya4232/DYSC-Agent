@@ -1,0 +1,15 @@
+{
+  "id": "builtin.bug-hunt",
+  "name": "Bug Hunt",
+  "description": "Find runtime, logic, and edge-case defects with practical fix suggestions.",
+  "triggers": [
+    "bug",
+    "error",
+    "exception"
+  ],
+  "steps": [
+    "Reproduce or infer failure path",
+    "Identify root cause",
+    "Produce human-like minimal diff suggestion"
+  ]
+}

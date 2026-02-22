@@ -1,0 +1,15 @@
+{
+  "id": "builtin.security-review",
+  "name": "Security Review",
+  "description": "Run secure coding checks and classify findings by severity.",
+  "triggers": [
+    "security",
+    "review",
+    "vulnerability"
+  ],
+  "steps": [
+    "Inspect changed files",
+    "Run static checks",
+    "Generate minimal safe patch suggestions"
+  ]
+}

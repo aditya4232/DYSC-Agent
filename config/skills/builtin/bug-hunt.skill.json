@@ -1,0 +1,20 @@
+{
+  "id": "builtin.bug-hunt",
+  "name": "Bug Hunt",
+  "description": "Scans the codebase for logical errors, unhandled exceptions, and anti-patterns, suggesting AI smart fixes.",
+  "triggers": ["find bugs", "detect errors", "smart fix"],
+  "steps": [
+    {
+      "action": "scan_workspace",
+      "args": {
+        "pattern": "**/*.{js,py,ts,go,java,rb,php}"
+      }
+    },
+    {
+      "action": "analyze_code",
+      "args": {
+        "rules": ["logical_errors", "anti_patterns"]
+      }
+    }
+  ]
+}

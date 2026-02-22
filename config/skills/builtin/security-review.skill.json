@@ -1,0 +1,20 @@
+{
+  "id": "builtin.security-review",
+  "name": "Security Review",
+  "description": "Performs an automated security review of the codebase, looking for vulnerabilities like SSRF, arbitrary file reads, and injection flaws.",
+  "triggers": ["security review", "check security", "find vulnerabilities"],
+  "steps": [
+    {
+      "action": "scan_workspace",
+      "args": {
+        "pattern": "**/*.{js,py,ts,go,java,rb,php}"
+      }
+    },
+    {
+      "action": "analyze_code",
+      "args": {
+        "rules": ["owasp_top_10", "cwe_sans_top_25"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "builtin.filesystem",
+  "name": "Filesystem",
+  "description": "Read and write files in the workspace.",
+  "triggers": ["read file", "write file", "list files"],
+  "steps": [
+    {
+      "action": "read_file",
+      "args": {
+        "path": "{path}"
+      }
+    },
+    {
+      "action": "write_file",
+      "args": {
+        "path": "{path}",
+        "content": "{content}"
+      }
+    },
+    {
+      "action": "list_files",
+      "args": {
+        "path": "{path}"
+      }
+    }
+  ]
+}

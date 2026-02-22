@@ -1,0 +1,17 @@
+{
+  "name": "dysc-agent",
+  "version": "0.1.0",
+  "description": "DYSC CLI agent for automated security reviews and robust AI fix guidance",
+  "license": "SEE LICENSE IN LICENSE",
+  "bin": {
+    "dysc": "apps/cli/main.js"
+  },
+  "scripts": {
+    "start": "node apps/cli/main.js start",
+    "health": "node apps/cli/main.js health",
+    "install:global": "npm install -g ."
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
