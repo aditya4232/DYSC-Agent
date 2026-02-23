@@ -1,14 +1,49 @@
 {
   "name": "dysc-agent",
-  "version": "0.1.0",
-  "description": "DYSC CLI agent for automated security reviews and robust AI fix guidance",
-  "license": "SEE LICENSE IN LICENSE",
+  "version": "0.77.0",
+  "description": "DYSC — Security-first coding CLI agent with multi-provider AI, automated vulnerability scanning, and interactive REPL",
+  "author": "Aditya Shenvi <adityashenvi4232@gmail.com> (https://github.com/aditya4232)",
+  "homepage": "https://github.com/aditya4232/DYSC-Agent-#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aditya4232/DYSC-Agent-.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aditya4232/DYSC-Agent-/issues"
+  },
+  "keywords": [
+    "dysc",
+    "cli",
+    "ai-agent",
+    "security-review",
+    "coding-agent",
+    "vulnerability-scanner",
+    "llm",
+    "openai",
+    "ollama",
+    "repl"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "apps/cli/**",
+    "apps/agent-runtime/**/*.py",
+    "config/skills/builtin/",
+    "docs/",
+    "scripts/",
+    "skills/builtin/",
+    "LICENSE",
+    "README.md"
+  ],
   "bin": {
     "dysc": "apps/cli/main.js"
   },
   "scripts": {
     "start": "node apps/cli/main.js start",
     "health": "node apps/cli/main.js health",
+    "doctor": "node apps/cli/main.js doctor",
     "install:global": "npm install -g ."
   },
   "engines": {

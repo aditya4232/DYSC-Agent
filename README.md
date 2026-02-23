@@ -1,160 +1,303 @@
-# DYSC Agent (Hybrid CLI + Runtime)
+<div align="center">
 
-DYSC is a non-web coding agent scaffold with:
+# DYSC Agent
 
-- Multi-provider API setup with primary provider selection
-- Primary workspace folder management
-- Skills registry (built-in + additional local installs)
-- Claude-Code-style security review and AI fix suggestion flows
-- Real-time dependency/context snapshot (manifests + Python packages)
-- Green-signal startup readiness checks
-- Local backend chat persistence with SQLite
+**Security-first coding CLI agent with multi-provider AI, automated vulnerability scanning, and interactive REPL.**
 
-## Architecture
+[![npm version](https://img.shields.io/npm/v/dysc-agent?color=cb3837&logo=npm)](https://www.npmjs.com/package/dysc-agent)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://python.org/)
 
-- Node CLI: `apps/cli/main.js`
-- Python runtime: `apps/agent-runtime/main.py`
-- Runtime modules: `apps/agent-runtime/dysc_runtime/`
-- Config files: `config/`
-- Persistent data: `data/`
-- Skills files: `skills/`
+```
+      @@@
+  @@@@@@@@@@@
+ @@@@@@ @@@@@@
+@@@@@   *   @@@@@
+ @@@@@@ @@@@@@
+  @@@@@@@@@@@
+      @@@
+   DYSC AGENT v0.77
+```
 
+</div>
 
-## Quick Start
+---
 
-### Install like a global CLI
+## What is DYSC
 
-Install globally from the project root:
+DYSC is a globally installable CLI agent that combines static security analysis with AI-powered fix suggestions. It connects to any OpenAI-compatible provider (OpenRouter, Groq, Ollama, etc.), manages local workspaces, and offers an interactive REPL with tool-calling and persistent chat.
 
-```powershell
+**Core ideas:**
+
+- API keys stay in OS environment variables — never stored in config files
+- Multi-provider setup with primary/fallback selection
+- Automated scanning for Python and JavaScript vulnerability patterns
+- Human-robust fix plans for every finding
+- SQLite-backed chat persistence
+- Extensible skills system (built-in + local installs)
+
+---
+
+## Install
+
+**From npm (recommended):**
+
+```bash
+npm install -g dysc-agent
+```
+
+**From source (contributors):**
+
+```bash
+git clone https://github.com/aditya4232/DYSC-Agent-.git
+cd DYSC-Agent-
 npm install -g .
 ```
 
-Or run the installer script:
+**Verify:**
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+```bash
+dysc health
 ```
 
-Then run DYSC directly:
+---
 
-```powershell
+## Quick Start
+
+```bash
+# 1. Initialize config and workspace
+dysc onboard
+
+# 2. Check system readiness
 dysc health
+
+# 3. Launch interactive agent
 dysc start
 ```
 
-### 1) Initialize project state
+---
 
-```powershell
-node apps/cli/main.js init
+## Command Reference
+
+### Core
+
+| Command | Description |
+|---|---|
+| `dysc init` | Initialize config files and directories |
+| `dysc onboard [path]` | First-time setup with guided configuration |
+| `dysc start` | Launch interactive REPL with AI agent |
+| `dysc start --once` | Readiness check and exit |
+| `dysc health` | Run full system health check |
+| `dysc doctor` | Alias for `dysc health` |
+| `dysc --version` | Print version |
+
+### Provider and API Security
+
+```bash
+dysc provider list
+dysc provider add --id <id> --type <openai_compatible|provider_specific> --base-url <url> --api-key-env <ENV> --enabled true
+dysc provider set-primary <id>
+dysc provider set-key-env <id> <ENV>
+dysc provider key-status <id>
 ```
 
-This creates default config and local DB schema.
+Set an API key securely (never stored in config files):
 
-### 2) Configure providers (single or multiple)
+```bash
+# Linux / macOS
+export OPENROUTER_API_KEY="your_key_here"
 
-List providers:
-
-```powershell
-node apps/cli/main.js provider list
+# Windows (permanent)
+setx OPENROUTER_API_KEY "your_key_here"
 ```
 
-Add a provider:
+### Workspace Management
 
-```powershell
-node apps/cli/main.js provider add --id groq-main --type provider_specific --base-url https://api.groq.com/openai/v1 --api-key-env GROQ_API_KEY --enabled true
+```bash
+dysc workspace show             # Show current workspace config
+dysc workspace set <path>       # Set primary workspace
+dysc workspace open <path>      # Open a local project
+dysc workspace use-current      # Use terminal's current directory
 ```
 
-Set primary provider:
+If the configured workspace path is missing or invalid, DYSC falls back to the current working directory automatically.
 
-```powershell
-node apps/cli/main.js provider set-primary groq-main
+### Security and Context
+
+```bash
+dysc context packages                              # Snapshot runtime dependencies
+dysc review security --limit 200                   # Scan workspace for vulnerabilities
+dysc fix suggest --file <path> --line <n> --rule <RULE-ID> --snippet "<code>"
 ```
 
-### 3) Set primary workspace folder
+### Settings
 
-```powershell
-node apps/cli/main.js workspace set D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-
+```bash
+dysc settings show
+dysc settings set default_model llama3
+dysc settings set max_tool_rounds 6
 ```
 
-### 4) Manage skills
+### Skills
 
-List skills:
-
-```powershell
-node apps/cli/main.js skills list
+```bash
+dysc skills list
+dysc skills enable <skillId>
+dysc skills disable <skillId>
+dysc skills install-local <skillId> <jsonPath>
 ```
 
-Enable a skill:
+### Chat Persistence
 
-```powershell
-node apps/cli/main.js skills enable builtin.security-review
+```bash
+dysc chat save --session demo --role user --content "scan this repo"
+dysc chat list demo
 ```
 
-Install an additional local skill JSON:
+---
 
-```powershell
-node apps/cli/main.js skills install-local custom.fixstyle D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-/skills-imports/custom.fixstyle.json
+## Interactive Slash Commands
+
+Inside `dysc start`:
+
+```
+/help        Show available commands
+/health      Run health checks
+/review [n]  Run security review (optional limit)
+/context     Show runtime/package context
+/settings    Display current settings
+/providers   List configured providers
+/workspace   Show workspace info
+/skills      List skills
+/exit        Exit the REPL
 ```
 
-Security note: local skill imports are restricted to the `skills-imports/` folder.
+---
 
-### 5) Start DYSC agent with green signal
+## Project Structure
 
-```powershell
-node apps/cli/main.js start
+```
+DYSC-Agent-/
+├── apps/
+│   ├── cli/
+│   │   └── main.js                    # Global `dysc` command entry (Node.js)
+│   └── agent-runtime/
+│       ├── main.py                    # Command dispatcher + interactive REPL
+│       └── dysc_runtime/
+│           ├── __init__.py            # Package marker + version
+│           ├── chat_store.py          # SQLite chat persistence
+│           ├── context_runtime.py     # Dependency/manifest discovery
+│           ├── health.py              # System health checks
+│           ├── llm.py                 # LLM API client (OpenAI-compatible)
+│           ├── paths.py               # Centralized path constants
+│           ├── providers.py           # Provider registry + URL validation
+│           ├── security.py            # Static security scan rules (8 rules)
+│           ├── settings.py            # Runtime settings management
+│           ├── skills.py              # Skill registry + local install
+│           ├── state.py               # Bootstrap + default config creation
+│           ├── tools.py               # Filesystem tool-call handlers
+│           └── workspace.py           # Workspace state + fallback logic
+├── config/
+│   ├── providers.json                 # Provider config (gitignored)
+│   ├── settings.json                  # Runtime settings (gitignored)
+│   ├── skills.json                    # Skills registry (gitignored)
+│   ├── workspaces.json                # Workspace paths (gitignored)
+│   └── skills/builtin/               # Shipped skill definitions
+├── data/
+│   └── chat.db                        # SQLite chat database (gitignored)
+├── docs/
+│   └── setup.md                       # Detailed setup guide
+├── scripts/
+│   └── install.ps1                    # Windows PowerShell install helper
+├── skills/
+│   ├── builtin/                       # Source skill asset templates
+│   └── installed/                     # User-installed local skills
+├── skills-imports/                    # Staging area for local skill imports
+├── package.json
+├── LICENSE
+└── README.md
 ```
 
-If all checks pass, DYSC prints:
+---
 
-```text
-🟢 DYSC READY
+## Security Rules
+
+DYSC ships with 8 built-in security rules covering Python and JavaScript:
+
+| Rule ID | Severity | Description |
+|---|---|---|
+| `PY-EVAL-001` | High | Use of `eval()` — arbitrary code execution |
+| `PY-EXEC-001` | High | Use of `exec()` — untrusted code execution |
+| `PY-SHELL-001` | High | `shell=True` — command injection risk |
+| `PY-REQUESTS-001` | Medium | `verify=False` — TLS verification disabled |
+| `PY-HASH-001` | Medium | MD5/SHA1 — weak hash algorithms |
+| `JS-EVAL-001` | High | JavaScript `eval()` — unsafe with untrusted input |
+| `JS-FUNCTION-001` | High | `new Function()` — dynamic function construction |
+| `JS-EXEC-001` | High | `child_process.exec` — shell command execution |
+
+---
+
+## Built-in Skills
+
+| Skill | Description |
+|---|---|
+| `builtin.security-review` | Static security checks with severity classification |
+| `builtin.bug-hunt` | Runtime, logic, and edge-case defect detection |
+| `builtin.filesystem` | File operations within the workspace |
+
+---
+
+## Requirements
+
+- **Node.js** 18+
+- **Python** 3.10+
+- An OpenAI-compatible API provider (Ollama runs locally for free)
+
+---
+
+## Publishing (Maintainers)
+
+```bash
+npm login
+npm version 0.77.0
+npm publish --access public
 ```
 
-The process remains active until you stop it (`Ctrl + C`).
+---
 
-For one-time readiness verification:
+## Troubleshooting
 
-```powershell
-node apps/cli/main.js start --once
-```
+| Issue | Solution |
+|---|---|
+| `ENEEDAUTH` | Run `npm login` or configure your npm token |
+| `E403` on publish | Your npm account needs 2FA-bypass publish permissions or OTP |
+| `No working Python executable found` | Set `DYSC_PYTHON` env var to a valid Python binary path |
+| Health check fails on workspace | Run `dysc workspace use-current` to reset to current directory |
+| Provider key not found | Check with `dysc provider key-status <id>` and verify env var |
 
-### 6) Real-time context and security review
+---
 
-Get current dependency/runtime context:
+## Contributing
 
-```powershell
-node apps/cli/main.js context packages
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Install locally: `npm install -g .`
+4. Test your changes: `dysc health`
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-Run automated security review:
+---
 
-```powershell
-node apps/cli/main.js review security --limit 200
-```
+## License
 
-Generate a human-robust fix plan for a finding:
+MIT — see [LICENSE](./LICENSE).
 
-```powershell
-node apps/cli/main.js fix suggest --file apps/agent-runtime/main.py --line 120 --rule PY-EVAL-001 --snippet "eval(user_input)"
-```
+---
 
-### 7) Save and read chat history (backend SQLite)
+<div align="center">
 
-Save message:
+**DYSC Agent v0.77** — Built by [Aditya Shenvi](https://github.com/aditya4232)
 
-```powershell
-node apps/cli/main.js chat save --session demo --role user --content "scan this repo"
-```
-
-List session messages:
-
-```powershell
-node apps/cli/main.js chat list demo
-```
-
-## Notes
-
-- DYSC supports both OpenAI-compatible and provider-specific adapters in config.
-- API keys are referenced by environment variable names (no plaintext secrets in config).
-- Offline mode works with local endpoints (example: Ollama-compatible base URL).
+</div>

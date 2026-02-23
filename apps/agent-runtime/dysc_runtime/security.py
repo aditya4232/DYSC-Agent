@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from .workspace import show_workspace
+from .workspace import get_effective_workspace
 
 
 SECURITY_RULES = [
@@ -64,8 +64,19 @@ SECURITY_RULES = [
 ]
 
 
+EXCLUDED_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    "dist",
+    "build",
+}
+
+
 def _workspace_root():
-    workspace = show_workspace()
+    workspace = get_effective_workspace()
     return Path(workspace).resolve() if workspace else Path.cwd().resolve()
 
 
@@ -88,6 +99,8 @@ def run_security_review(limit=150):
     scanned_files = 0
 
     for file_path in root.rglob("*"):
+        if any(part in EXCLUDED_DIRS for part in file_path.parts):
+            continue
         if not file_path.is_file() or not _should_scan(file_path):
             continue
 
@@ -103,6 +116,12 @@ def run_security_review(limit=150):
             continue
 
         for line_number, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("#") or stripped.startswith("\"") or stripped.startswith("'"):
+                continue
+
             for rule in SECURITY_RULES:
                 if language == "python" and not rule["id"].startswith("PY-"):
                     continue

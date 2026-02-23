@@ -2,7 +2,8 @@ import json
 from pathlib import Path
 
 from .chat_store import ChatStore
-from .paths import CHAT_DB_FILE, CONFIG_DIR, DATA_DIR, PROVIDERS_FILE, SKILLS_DIR, SKILLS_FILE, WORKSPACES_FILE
+from .paths import CHAT_DB_FILE, CONFIG_DIR, DATA_DIR, PROVIDERS_FILE, SETTINGS_FILE, SKILLS_DIR, SKILLS_FILE, WORKSPACES_FILE
+from .settings import DEFAULT_SETTINGS
 
 
 DEFAULT_PROVIDERS = {
@@ -55,6 +56,7 @@ def ensure_bootstrap():
     _write_json_if_missing(PROVIDERS_FILE, DEFAULT_PROVIDERS)
     _write_json_if_missing(WORKSPACES_FILE, DEFAULT_WORKSPACES)
     _write_json_if_missing(SKILLS_FILE, DEFAULT_SKILLS)
+    _write_json_if_missing(SETTINGS_FILE, DEFAULT_SETTINGS)
 
     ChatStore().initialize()
 

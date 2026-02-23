@@ -19,6 +19,12 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 
 After install, use `dysc` directly (example: `dysc health`).
 
+## Onboard
+
+```powershell
+dysc onboard
+```
+
 ## Initialize
 
 ```powershell
@@ -36,28 +42,50 @@ DYSC supports:
 Add providers:
 
 ```powershell
-node apps/cli/main.js provider add --id openrouter --type openai_compatible --base-url https://openrouter.ai/api/v1 --api-key-env OPENROUTER_API_KEY --enabled true
-node apps/cli/main.js provider add --id groq-main --type provider_specific --base-url https://api.groq.com/openai/v1 --api-key-env GROQ_API_KEY --enabled true
+dysc provider add --id openrouter --type openai_compatible --base-url https://openrouter.ai/api/v1 --api-key-env OPENROUTER_API_KEY --enabled true
+dysc provider add --id groq-main --type provider_specific --base-url https://api.groq.com/openai/v1 --api-key-env GROQ_API_KEY --enabled true
 ```
 
 Set primary provider:
 
 ```powershell
-node apps/cli/main.js provider set-primary openrouter
+dysc provider set-primary openrouter
+```
+
+Secure API key setup (key stays in env only):
+
+```powershell
+dysc provider set-key-env openrouter OPENROUTER_API_KEY
+setx OPENROUTER_API_KEY "<your_key_here>"
+dysc provider key-status openrouter
 ```
 
 ## Primary Workspace Folder
 
 ```powershell
-node apps/cli/main.js workspace set D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-
+dysc workspace set D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-
 ```
+
+Open any local project:
+
+```powershell
+dysc workspace open D:/path/to/your/local-project
+```
+
+Use current terminal project folder:
+
+```powershell
+dysc workspace use-current
+```
+
+DYSC auto-uses current project as default if previously configured workspace is missing.
 
 ## Skills
 
 Built-in skills are pre-registered. Add local skill JSON:
 
 ```powershell
-node apps/cli/main.js skills install-local custom.patch-tone D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-/skills-imports/custom.patch-tone.json
+dysc skills install-local custom.patch-tone D:/Spicyepanda-24-26/xystocode26/AI-26/DYSC-Agent-/skills-imports/custom.patch-tone.json
 ```
 
 Local skill import is restricted to the `skills-imports/` directory.
@@ -65,14 +93,14 @@ Local skill import is restricted to the `skills-imports/` directory.
 Enable/disable skills:
 
 ```powershell
-node apps/cli/main.js skills enable custom.patch-tone
-node apps/cli/main.js skills disable custom.patch-tone
+dysc skills enable custom.patch-tone
+dysc skills disable custom.patch-tone
 ```
 
 ## Start and Green Signal
 
 ```powershell
-node apps/cli/main.js start
+dysc start
 ```
 
 If readiness checks pass, DYSC emits `🟢 DYSC READY`.
@@ -82,7 +110,7 @@ If readiness checks pass, DYSC emits `🟢 DYSC READY`.
 For one-time readiness check only:
 
 ```powershell
-node apps/cli/main.js start --once
+dysc start --once
 ```
 
 ## Claude-Code-Style Security Workflows
@@ -90,19 +118,27 @@ node apps/cli/main.js start --once
 Get real-time runtime and package context:
 
 ```powershell
-node apps/cli/main.js context packages
+dysc context packages
 ```
 
 Run automated security review:
 
 ```powershell
-node apps/cli/main.js review security --limit 200
+dysc review security --limit 200
 ```
 
 Generate robust fix guidance for any finding:
 
 ```powershell
-node apps/cli/main.js fix suggest --file apps/agent-runtime/main.py --line 120 --rule PY-EVAL-001 --snippet "eval(user_input)"
+dysc fix suggest --file apps/agent-runtime/main.py --line 120 --rule PY-EVAL-001 --snippet "eval(user_input)"
+```
+
+## Settings
+
+```powershell
+dysc settings show
+dysc settings set default_model llama3
+dysc settings set max_tool_rounds 6
 ```
 
 ## Chat Backend Persistence
@@ -110,13 +146,19 @@ node apps/cli/main.js fix suggest --file apps/agent-runtime/main.py --line 120 -
 Save:
 
 ```powershell
-node apps/cli/main.js chat save --session demo --role user --content "run secure review"
+dysc chat save --session demo --role user --content "run secure review"
 ```
 
 Read:
 
 ```powershell
-node apps/cli/main.js chat list demo
+dysc chat list demo
+```
+
+Slash commands in interactive runtime:
+
+```text
+/help /health /review [limit] /context /settings /providers /workspace /skills /exit
 ```
 
 Stored in `data/chat.db`.

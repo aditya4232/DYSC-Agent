@@ -1,8 +1,29 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
 
+# Node
+node_modules/
+
+# DYSC user configs (generated at runtime)
 config/providers.json
 config/skills.json
 config/workspaces.json
+config/settings.json
 
+# DYSC data
 data/chat.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# kluster
+.kluster/

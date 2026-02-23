@@ -1,5 +1,7 @@
 import json
 import ipaddress
+import os
+import re
 from urllib.parse import urlparse
 
 from .paths import PROVIDERS_FILE
@@ -70,3 +72,31 @@ def set_primary_provider(provider_id):
         raise ValueError(f"Provider not found: {provider_id}")
     data["primary"] = provider_id
     _write(data)
+
+
+def set_provider_key_env(provider_id, api_key_env):
+    if not re.fullmatch(r"[A-Z_][A-Z0-9_]{0,127}", api_key_env):
+        raise ValueError("api_key_env must be a valid environment variable name")
+
+    data = _read()
+    provider = next((p for p in data["providers"] if p["id"] == provider_id), None)
+    if provider is None:
+        raise ValueError(f"Provider not found: {provider_id}")
+    provider["api_key_env"] = api_key_env
+    _write(data)
+    return provider
+
+
+def provider_key_status(provider_id):
+    data = _read()
+    provider = next((p for p in data["providers"] if p["id"] == provider_id), None)
+    if provider is None:
+        raise ValueError(f"Provider not found: {provider_id}")
+
+    env_name = provider.get("api_key_env")
+    value = os.environ.get(env_name, "")
+    return {
+        "provider": provider_id,
+        "api_key_env": env_name,
+        "present": bool(value),
+    }

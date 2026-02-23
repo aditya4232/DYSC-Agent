@@ -1,0 +1,30 @@
+# Source control
+.git
+.github
+.gitattributes
+
+# Python artifacts
+.venv
+venv
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Runtime data (user-specific)
+data
+config/providers.json
+config/workspaces.json
+config/skills.json
+config/settings.json
+
+# Development
+skills-imports
+.kluster
+.agent
+node_modules
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db

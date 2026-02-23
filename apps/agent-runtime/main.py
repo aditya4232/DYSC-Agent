@@ -1,17 +1,64 @@
 import json
+import os
 import sys
+import time
 import uuid
 
 from dysc_runtime.chat_store import ChatStore
 from dysc_runtime.health import run_health_checks
-from dysc_runtime.providers import add_provider, list_providers, set_primary_provider
+from dysc_runtime.providers import (
+    add_provider,
+    list_providers,
+    provider_key_status,
+    set_primary_provider,
+    set_provider_key_env,
+)
 from dysc_runtime.skills import disable_skill, enable_skill, install_local_skill, list_skills
 from dysc_runtime.state import ensure_bootstrap
-from dysc_runtime.workspace import set_workspace, show_workspace
+from dysc_runtime.workspace import ensure_workspace_default_to_cwd, set_workspace, show_workspace
 from dysc_runtime.llm import chat_completion
 from dysc_runtime.tools import get_available_tools, execute_tool
 from dysc_runtime.security import run_security_review, suggest_human_fix
 from dysc_runtime.context_runtime import get_runtime_context
+from dysc_runtime.settings import list_settings, set_setting
+
+
+DYSC_LOGO = [
+    "          @@@          ",
+    "      @@@@@@@@@@@      ",
+    "    @@@@@@ @@@@@@      ",
+    "   @@@@@   *   @@@@@   ",
+    "    @@@@@@ @@@@@@      ",
+    "      @@@@@@@@@@@      ",
+    "          @@@          ",
+    "       DYSC AGENT      ",
+]
+
+
+def render_logo():
+    for line in DYSC_LOGO:
+        print(line)
+
+
+def animate_boot():
+    if not sys.stdout.isatty():
+        return
+
+    frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    message = "Booting DYSC AGENT"
+    try:
+        for index in range(18):
+            frame = frames[index % len(frames)]
+            print(f"\r{frame} {message}", end="", flush=True)
+            time.sleep(0.06)
+        print("\r✅ DYSC AGENT online      ")
+    except UnicodeEncodeError:
+        fallback = ["-", "\\", "|", "/"]
+        for index in range(12):
+            frame = fallback[index % len(fallback)]
+            print(f"\r{frame} {message}", end="", flush=True)
+            time.sleep(0.06)
+        print("\r[OK] DYSC AGENT online      ")
 
 
 def emit(payload, exit_code=0):
@@ -21,6 +68,7 @@ def emit(payload, exit_code=0):
 
 def handle_init(_):
     result = ensure_bootstrap()
+    ensure_workspace_default_to_cwd(force=False)
     emit({"ok": True, "message": "DYSC initialized", "paths": result})
 
 
@@ -47,8 +95,31 @@ def handle_provider_set_primary(args):
     emit({"ok": True, "primary": args[0]})
 
 
+def handle_provider_set_key_env(args):
+    if len(args) < 2:
+        emit({"ok": False, "error": "provider-set-key-env requires provider id and env var name"}, 1)
+    ensure_bootstrap()
+    provider = set_provider_key_env(args[0], args[1])
+    emit(
+        {
+            "ok": True,
+            "provider": provider["id"],
+            "api_key_env": provider["api_key_env"],
+            "note": "Store key securely in OS env var; DYSC never stores key plaintext.",
+        }
+    )
+
+
+def handle_provider_key_status(args):
+    if not args:
+        emit({"ok": False, "error": "provider-key-status requires provider id"}, 1)
+    ensure_bootstrap()
+    emit({"ok": True, "status": provider_key_status(args[0])})
+
+
 def handle_workspace_show(_):
     ensure_bootstrap()
+    ensure_workspace_default_to_cwd(force=False)
     emit({"ok": True, "workspace": show_workspace()})
 
 
@@ -57,6 +128,16 @@ def handle_workspace_set(args):
         emit({"ok": False, "error": "workspace-set requires path"}, 1)
     ensure_bootstrap()
     selected = set_workspace(args[0])
+    emit({"ok": True, "workspace": selected})
+
+
+def handle_workspace_open(args):
+    handle_workspace_set(args)
+
+
+def handle_workspace_use_current(_):
+    ensure_bootstrap()
+    selected = ensure_workspace_default_to_cwd(force=True)
     emit({"ok": True, "workspace": selected})
 
 
@@ -100,6 +181,8 @@ def handle_start(args):
     if health["status"] != "green":
         emit({"ok": False, "message": "DYSC failed readiness", "health": health}, 1)
 
+    render_logo()
+    animate_boot()
     try:
         print("🟢 DYSC READY")
     except UnicodeEncodeError:
@@ -121,6 +204,7 @@ def handle_start(args):
 
     print(f"Session ID: {session_id}")
     print("Type 'exit' or 'quit' to stop.")
+    print("Slash commands: /help /health /review [limit] /context /settings /providers /workspace /skills /exit")
     print("-" * 40)
 
     try:
@@ -135,6 +219,46 @@ def handle_start(args):
                 
             if user_input.strip().lower() in {"exit", "quit"}:
                 break
+
+            if user_input.strip().startswith("/"):
+                slash = user_input.strip().split()
+                command = slash[0].lower()
+
+                if command == "/help":
+                    print("Available: /help /health /review [limit] /context /settings /providers /workspace /skills /exit")
+                    continue
+                if command == "/exit":
+                    break
+                if command == "/health":
+                    print(json.dumps(run_health_checks(), indent=2))
+                    continue
+                if command == "/context":
+                    print(json.dumps(get_runtime_context(), indent=2))
+                    continue
+                if command == "/settings":
+                    print(json.dumps(list_settings(), indent=2))
+                    continue
+                if command == "/providers":
+                    print(json.dumps(list_providers(), indent=2))
+                    continue
+                if command == "/workspace":
+                    print(json.dumps(show_workspace(), indent=2))
+                    continue
+                if command == "/skills":
+                    print(json.dumps(list_skills(), indent=2))
+                    continue
+                if command == "/review":
+                    limit = 150
+                    if len(slash) > 1:
+                        try:
+                            limit = max(1, min(int(slash[1]), 1000))
+                        except ValueError:
+                            print("Invalid /review limit; using default 150")
+                    print(json.dumps(run_security_review(limit=limit), indent=2))
+                    continue
+
+                print(f"Unknown slash command: {command}. Try /help")
+                continue
 
             store.save_message(session_id, "user", user_input)
 
@@ -235,6 +359,51 @@ def handle_fix_suggest(args):
     emit(suggest_human_fix(file_path, line, rule, snippet))
 
 
+def handle_settings_show(_):
+    ensure_bootstrap()
+    emit({"ok": True, "settings": list_settings()})
+
+
+def handle_settings_set(args):
+    if len(args) < 2:
+        emit({"ok": False, "error": "settings-set requires key and value"}, 1)
+    ensure_bootstrap()
+    settings = set_setting(args[0], args[1])
+    emit({"ok": True, "settings": settings})
+
+
+def handle_onboard(args):
+    result = ensure_bootstrap()
+    ensure_workspace_default_to_cwd(force=False)
+    workspace = os.getcwd()
+    if args:
+        selected = set_workspace(args[0])
+        workspace = selected.get("primary", workspace)
+
+    health = run_health_checks()
+    providers = list_providers()
+    primary_provider = providers.get("primary")
+    key_status = provider_key_status(primary_provider) if primary_provider else None
+
+    emit(
+        {
+            "ok": True,
+            "message": "DYSC onboarding ready",
+            "paths": result,
+            "workspace": workspace,
+            "primary_provider": primary_provider,
+            "api_key": key_status,
+            "health": health,
+            "next_steps": [
+                "Set provider key env name: dysc provider set-key-env <providerId> <ENV_VAR>",
+                "Set environment variable in your shell/OS (never commit keys)",
+                "Validate key presence: dysc provider key-status <providerId>",
+                "Start agent: dysc start",
+            ],
+        }
+    )
+
+
 def handle_chat_save(args):
     if len(args) < 3:
         emit({"ok": False, "error": "chat-save requires session, role, content"}, 1)
@@ -266,8 +435,12 @@ def main():
         "provider-list": handle_provider_list,
         "provider-add": handle_provider_add,
         "provider-set-primary": handle_provider_set_primary,
+        "provider-set-key-env": handle_provider_set_key_env,
+        "provider-key-status": handle_provider_key_status,
         "workspace-show": handle_workspace_show,
         "workspace-set": handle_workspace_set,
+        "workspace-open": handle_workspace_open,
+        "workspace-use-current": handle_workspace_use_current,
         "skills-list": handle_skills_list,
         "skills-enable": handle_skills_enable,
         "skills-disable": handle_skills_disable,
@@ -280,6 +453,9 @@ def main():
         "context-packages": handle_context_packages,
         "review-security": handle_review_security,
         "fix-suggest": handle_fix_suggest,
+        "settings-show": handle_settings_show,
+        "settings-set": handle_settings_set,
+        "onboard": handle_onboard,
     }
 
     handler = handlers.get(command)

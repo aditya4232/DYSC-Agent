@@ -2,10 +2,10 @@ import json
 import os
 from pathlib import Path
 
-from .workspace import show_workspace
+from .workspace import get_effective_workspace
 
 def get_workspace_root():
-    ws = show_workspace()
+    ws = get_effective_workspace()
     if not ws:
         return Path.cwd()
     return Path(ws)

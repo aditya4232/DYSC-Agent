@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error
 
 from .providers import list_providers
+from .settings import list_settings
 
 def get_primary_provider():
     data = list_providers()
@@ -29,8 +30,9 @@ def chat_completion(messages, tools=None):
 
     url = f"{base_url}/chat/completions"
     
-    # Default model for Ollama, can be made configurable later
-    model = "llama3" if provider["id"] == "local-ollama" else "gpt-4o"
+    settings = list_settings()
+    default_model = settings.get("default_model", "llama3")
+    model = default_model
 
     payload = {
         "model": model,

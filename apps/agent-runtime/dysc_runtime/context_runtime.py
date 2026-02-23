@@ -1,7 +1,7 @@
 from importlib import metadata
 from pathlib import Path
 
-from .workspace import show_workspace
+from .workspace import get_effective_workspace
 
 
 MANIFEST_FILES = [
@@ -19,7 +19,7 @@ MANIFEST_FILES = [
 
 
 def _workspace_root():
-    workspace = show_workspace()
+    workspace = get_effective_workspace()
     return Path(workspace).resolve() if workspace else Path.cwd().resolve()
 
 
